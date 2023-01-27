@@ -1,43 +1,79 @@
 fun main() {
-    while (true) {
-        val input = readln()
-        if (input.contains("\\d".toRegex())) {
-            var sum = 0
-            var operation = "+"
-            val chars = input.split(" ").toMutableList()
+    Calculator().start()
+}
 
-            while (chars.isNotEmpty()){
-                var char = chars.removeFirst()
+class Calculator {
+    val variables = mutableMapOf<String, Int>()
 
-                when {
-                    char.matches("(--)*".toRegex()) -> char = "+"
-                    char.matches("-*".toRegex()) -> char = "-"
-                    char.matches("\\+*".toRegex()) -> char = "+"
-                }
+    fun start() {
+        while (true) {
 
-                if (char in "+-") {
-                    operation = char
-                } else {
-                    try {
-                        when (operation) {
-                            "+" -> sum += char.toInt()
-                            "-" -> sum -= char.toInt()
-                        }
-                    } catch (e:Exception){
-                        println("Invalid expression")
-                    }
-                }
+            val input = readln()
+            if (input == "/exit") {
+                println("Bye!")
+                break
+            } else if (input == "/help") {
+                println("The program calculates the sum of numbers")
+            } else if (input.matches("/.*".toRegex())) {
+                println("Unknown Command")
+            } else {
+                processInput(input)
             }
-            println(sum)
-        } else if (input == "/exit") {
-            println("Bye!")
-            break
-        } else if (input == "/help") {
-            println("The program calculates the sum of numbers")
-        } else if (input.matches("/.*".toRegex())) {
-            println("Unknown Command")
-        } else if (input.isNotEmpty()) {
+        }
+    }
+
+    fun processInput(input:String){
+        try {
+            if (input.contains('=')) {
+                assignVariable(input)
+            } else {
+                println(calculate(input))
+            }
+        } catch (e:Exception) {
             println("Invalid expression")
         }
+    }
+    fun assignVariable(input: String) {
+        val identifier = input.substringBefore('=').trim()
+        val value = input.substringAfter('=').trim()
+        if (!identifier.matches("[a-zA-Z]*".toRegex())) {
+            println("Invalid identifier")
+            return
+        }
+        if (!value.matches("\\d*".toRegex())) {
+            println("Invalid assignment")
+            return
+        }
+        variables[identifier] = value.toInt()
+    }
+
+    fun calculate(input:String):Int {
+        var sum = 0
+        var operation = "+"
+        val chars = input.split(" ").toMutableList()
+
+        while (chars.isNotEmpty()){
+            var char = chars.removeFirst()
+
+            when {
+                char.matches("(--)*".toRegex()) -> char = "+"
+                char.matches("-*".toRegex()) -> char = "-"
+                char.matches("\\+*".toRegex()) -> char = "+"
+            }
+
+            if (char in "+-") {
+                operation = char
+            } else {
+                try {
+                    when (operation) {
+                        "+" -> sum += char.toInt()
+                        "-" -> sum -= char.toInt()
+                    }
+                } catch (e:Exception){
+                    println("Invalid expression")
+                }
+            }
+        }
+        return sum
     }
 }
