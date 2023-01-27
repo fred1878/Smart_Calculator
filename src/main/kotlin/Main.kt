@@ -18,9 +18,13 @@ fun main() {
                 if (char in "+-") {
                     operation = char
                 } else {
-                    when(operation) {
-                        "+" -> sum += char.toInt()
-                        "-" -> sum -= char.toInt()
+                    try {
+                        when (operation) {
+                            "+" -> sum += char.toInt()
+                            "-" -> sum -= char.toInt()
+                        }
+                    } catch (e:Exception){
+                        println("Invalid expression")
                     }
                 }
             }
@@ -30,6 +34,10 @@ fun main() {
             break
         } else if (input == "/help") {
             println("The program calculates the sum of numbers")
+        } else if (input.matches("/.*".toRegex())) {
+            println("Unknown Command")
+        } else if (input.isNotEmpty()) {
+            println("Invalid expression")
         }
     }
 }
