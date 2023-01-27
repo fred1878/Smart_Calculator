@@ -9,6 +9,9 @@ class Calculator {
         while (true) {
 
             val input = readln()
+            if (input.isEmpty()) {
+                continue
+            }
             if (input == "/exit") {
                 println("Bye!")
                 break
@@ -26,6 +29,8 @@ class Calculator {
         try {
             if (input.contains('=')) {
                 assignVariable(input)
+            } else if (input.trim().matches("[a-zA-Z]*".toRegex())) {
+                println(variables[input])
             } else {
                 println(calculate(input))
             }
@@ -40,11 +45,15 @@ class Calculator {
             println("Invalid identifier")
             return
         }
-        if (!value.matches("\\d*".toRegex())) {
+        if (!value.matches("\\d*".toRegex()) && !value.matches("[a-zA-Z]*".toRegex())) {
             println("Invalid assignment")
             return
         }
-        variables[identifier] = value.toInt()
+        variables[identifier] = assignVariableValue(value)
+    }
+
+    fun assignVariableValue(value:String):Int {
+        return value.toIntOrNull() ?: variables[value] ?: throw Exception()
     }
 
     fun calculate(input:String):Int {
@@ -76,4 +85,5 @@ class Calculator {
         }
         return sum
     }
+
 }
