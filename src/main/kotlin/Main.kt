@@ -1,13 +1,14 @@
+import java.util.*
+
 fun main() {
     Calculator().start()
 }
 
 class Calculator {
-    val variables = mutableMapOf<String, Int>()
+    private val variables = mutableMapOf<String, Int>()
 
     fun start() {
         while (true) {
-
             val input = readln()
             if (input.isEmpty()) {
                 continue
@@ -25,20 +26,19 @@ class Calculator {
         }
     }
 
-    fun processInput(input:String){
+    private fun processInput(input:String){
         try {
             if (input.contains('=')) {
                 assignVariable(input)
-            } else if (input.trim().matches("[a-zA-Z]*".toRegex())) {
-                println(variables[input])
             } else {
                 println(calculate(input))
             }
         } catch (e:Exception) {
-            println("Invalid expression")
+            println("Unknown variable")
         }
     }
-    fun assignVariable(input: String) {
+
+    private fun assignVariable(input: String) {
         val identifier = input.substringBefore('=').trim()
         val value = input.substringAfter('=').trim()
         if (!identifier.matches("[a-zA-Z]*".toRegex())) {
@@ -49,16 +49,16 @@ class Calculator {
             println("Invalid assignment")
             return
         }
-        variables[identifier] = assignVariableValue(value)
+        variables[identifier] = getVariableValue(value)
     }
 
-    fun assignVariableValue(value:String):Int {
+    private fun getVariableValue(value:String):Int {
         return value.toIntOrNull() ?: variables[value] ?: throw Exception()
     }
 
-    fun calculate(input:String):Int {
-        var sum = 0
-        var operation = "+"
+    private fun calculate(input:String):Int {
+        var nums = Stack<Int>()
+        var operations = Stack<String>()
         val chars = input.split(" ").toMutableList()
 
         while (chars.isNotEmpty()){
@@ -71,19 +71,22 @@ class Calculator {
             }
 
             if (char in "+-") {
-                operation = char
+                operations.push(char)
             } else {
-                try {
-                    when (operation) {
-                        "+" -> sum += char.toInt()
-                        "-" -> sum -= char.toInt()
+                if (operations.isEmpty()) {
+                    nums.push(getVariableValue(char))
+                } else {
+                    try {
+                        when (operations.pop()) {
+                            "+" -> nums.push(nums.pop() + getVariableValue(char))
+                            "-" -> nums.push(nums.pop() - getVariableValue(char))
+                        }
+                    } catch (e: Exception) {
+                        println("Invalid expression")
                     }
-                } catch (e:Exception){
-                    println("Invalid expression")
                 }
             }
         }
-        return sum
+        return nums.pop()
     }
-
 }
