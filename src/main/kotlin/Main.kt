@@ -1,3 +1,4 @@
+import java.math.BigInteger
 import java.util.*
 import kotlin.math.pow
 
@@ -6,7 +7,7 @@ fun main() {
 }
 
 class Calculator {
-    private val variables = mutableMapOf<String, Int>()
+    private val variables = mutableMapOf<String, BigInteger>()
 
     fun start() {
         while (true) {
@@ -27,19 +28,19 @@ class Calculator {
         }
     }
 
-    private fun processInput(input:String) {
+    private fun processInput(input: String) {
         try {
             if (input.contains('=')) {
                 assignVariable(input)
             } else {
                 println(calculateRPN(convertToRPN(input.replace("\\s".toRegex(), ""))))
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             println("Invalid Expression")
         }
     }
 
-    private fun convertToRPN(input: String):Stack<Token> {
+    private fun convertToRPN(input: String): Stack<Token> {
         val operator = Stack<Token>()
         val output = Stack<Token>()
 
@@ -55,7 +56,9 @@ class Calculator {
             if (token.isNumber()) {
                 output.add(token)
             } else if (token.isOperator()) {
-                while (operator.isNotEmpty() && token.getPrecidence() <= operator.peek().getPrecidence() && !operator.peek().isLeftBracket()) {
+                while (operator.isNotEmpty() && token.getPrecidence() <= operator.peek()
+                        .getPrecidence() && !operator.peek().isLeftBracket()
+                ) {
                     output.add(operator.pop())
                 }
                 operator.add(token)
@@ -65,7 +68,7 @@ class Calculator {
                 while (!operator.peek().isLeftBracket()) {
                     try {
                         output.add(operator.pop())
-                    } catch (e:Exception) {
+                    } catch (e: Exception) {
                         println("Invalid Expression")
                     }
                 }
@@ -73,7 +76,11 @@ class Calculator {
                     operator.pop()
                 }
             } else {
-                output.add(Token(getVariableValue(token.toString()).toString()))
+                try {
+                    output.add(Token(getVariableValue(token.toString()).toString()))
+                } catch (e:Exception) {
+                    println("Unknown variable")
+                }
             }
         }
         if (operator.contains(Token(")")) || operator.contains(Token("("))) {
@@ -86,22 +93,22 @@ class Calculator {
         return output
     }
 
-    private fun calculateRPN(input:Stack<Token>):Int {
+    private fun calculateRPN(input: Stack<Token>): BigInteger {
         val stack = Stack<Token>()
 
         for (token in input) {
             if (token.isNumber()) {
                 stack.push(token)
             } else if (token.isOperator()) {
-                val b = stack.pop().toInt()
-                val a = stack.pop().toInt()
+                val b = stack.pop().toBigInteger()
+                val a = stack.pop().toBigInteger()
 
                 when (token.toString()) {
                     "+" -> stack.push(Token((a + b).toString()))
                     "-" -> stack.push(Token((a - b).toString()))
                     "*" -> stack.push(Token((a * b).toString()))
                     "/" -> stack.push(Token((a / b).toString()))
-                    "^" -> stack.push(Token((a.toDouble().pow(b).toInt()).toString()))
+                    "^" -> stack.push(Token((a.pow(b.toInt()).toBigDecimal().toBigInteger().toString())))
                 }
             }
         }
@@ -109,7 +116,7 @@ class Calculator {
             println("Stack is not correct size, contains $stack")
         }
 
-        return stack.pop().toInt()
+        return stack.pop().toBigInteger()
     }
 
     private fun assignVariable(input: String) {
@@ -126,73 +133,44 @@ class Calculator {
         variables[identifier] = getVariableValue(value)
     }
 
-    private fun getVariableValue(value:String):Int {
-        return value.toIntOrNull() ?: variables[value] ?: throw Exception()
+    private fun getVariableValue(value: String): BigInteger {
+        return value.toBigIntegerOrNull() ?: variables[value] ?: throw Exception()
     }
 
-    private fun calculate(input:String):Int {
-        val nums = Stack<Int>()
-        val operations = Stack<String>()
-        val chars = input.split(" ").toMutableList()
-
-        while (chars.isNotEmpty()){
-            var char = chars.removeFirst()
-
-            when {
-                char.matches("(--)*".toRegex()) -> char = "+"
-                char.matches("-*".toRegex()) -> char = "-"
-                char.matches("\\+*".toRegex()) -> char = "+"
-            }
-
-            if (char in "+-") {
-                operations.push(char)
-            } else {
-                if (operations.isEmpty()) {
-                    nums.push(getVariableValue(char))
-                } else {
-                    try {
-                        when (operations.pop()) {
-                            "+" -> nums.push(nums.pop() + getVariableValue(char))
-                            "-" -> nums.push(nums.pop() - getVariableValue(char))
-                        }
-                    } catch (e: Exception) {
-                        println("Invalid expression")
-                    }
-                }
-            }
+    data class Token(val token: String) {
+        fun isNumber(): Boolean {
+            return token.matches("-?\\d+".toRegex())
         }
-        return nums.pop()
-    }
-}
 
-data class Token(val token:String) {
-    fun isNumber():Boolean {
-        return token.matches("-?\\d+".toRegex())
-    }
-    fun isOperator():Boolean {
-        return token in "+-/*^"
-    }
-    fun isLeftBracket():Boolean {
-        return token in "("
-    }
-    fun isRightBracket():Boolean {
-        return token in ")"
-    }
-    override fun toString(): String {
-        return token
-    }
-    fun toInt():Int {
-        return token.toInt()
-    }
+        fun isOperator(): Boolean {
+            return token in "+-/*^"
+        }
 
-    fun getPrecidence():Int {
-        return when (token) {
-            "^" -> 4
-            "/" -> 3
-            "*" -> 3
-            "+" -> 2
-            "-" -> 2
-            else -> 0
+        fun isLeftBracket(): Boolean {
+            return token in "("
+        }
+
+        fun isRightBracket(): Boolean {
+            return token in ")"
+        }
+
+        override fun toString(): String {
+            return token
+        }
+
+        fun toBigInteger(): BigInteger {
+            return token.toBigInteger()
+        }
+
+        fun getPrecidence(): Int {
+            return when (token) {
+                "^" -> 4
+                "/" -> 3
+                "*" -> 3
+                "+" -> 2
+                "-" -> 2
+                else -> 0
+            }
         }
     }
 }
