@@ -35,7 +35,7 @@ class Calculator {
                 println(calculateRPN(convertToRPN(input.replace("\\s".toRegex(), ""))))
             }
         } catch (e:Exception) {
-            println("Unknown variable")
+            println("Invalid Expression")
         }
     }
 
@@ -55,12 +55,12 @@ class Calculator {
             if (token.isNumber()) {
                 output.add(token)
             } else if (token.isOperator()) {
-                while (operator.isNotEmpty() && token.getPrecidence() <= operator.peek().getPrecidence()) {
+                while (operator.isNotEmpty() && token.getPrecidence() <= operator.peek().getPrecidence() && !operator.peek().isLeftBracket()) {
                     output.add(operator.pop())
                 }
                 operator.add(token)
             } else if (token.isLeftBracket()) {
-                output.add(token)
+                operator.add(token)
             } else if (token.isRightBracket()) {
                 while (!operator.peek().isLeftBracket()) {
                     try {
